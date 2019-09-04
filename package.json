@@ -1,0 +1,45 @@
+{
+    "name": "coc-utils",
+    "version": "0.0.1",
+    "description": "Utilities for coc.nvim extensions",
+    "main": "out/index.js",
+    "scripts": {
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "dependencies": {
+        "vscode-jsonrpc": ">=4.0.0",
+        "vscode-languageserver-protocol": ">=3.14.0",
+        "extract-zip": "^1.6.7",
+        "follow-redirects": "^1.7.0",
+        "rimraf": "^2.6.3",
+        "tunnel": "0.0.6"
+    },
+    "devDependencies": {
+        "@types/node": "^10.3.3",
+        "typescript": "^3.0.3",
+        "coc.nvim": ">=0.0.71"
+    },
+    "engines": {
+        "coc": ">=0.0.71"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/coc-extensions/coc-utils.git"
+    },
+    "keywords": [
+        "coc.nvim",
+        "extension",
+        "utility"
+    ],
+    "categories": [
+        "Programming Languages",
+        "coc.nvim"
+    ],
+    "author": "Yatao Li",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/coc-extensions/coc-utils/issues"
+    },
+    "homepage": "https://github.com/coc-extensions/coc-utils#readme"
+}
