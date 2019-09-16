@@ -7,10 +7,11 @@
 import fs = require("fs");
 import os = require("os");
 import path = require("path");
-import { workspace, ExtensionContext, commands, TerminalResult } from 'coc.nvim';
-import { Uri } from 'coc.nvim'
-import { Range } from 'vscode-languageserver-protocol';
-import {REPLProcess} from './repl';
+import {workspace} from 'coc.nvim';
+import {Uri} from 'coc.nvim'
+import {IncomingMessage} from 'http';
+
+const followRedirects = require("follow-redirects")
 
 export function fileURLToPath(x: string) {
     return Uri.parse(x).fsPath
@@ -64,11 +65,10 @@ export async function getCurrentSelection(mode: string) {
     let doc = await workspace.document
 
     if (mode === "v" || mode === "V") {
-        let [from, _ ] = await doc.buffer.mark("<")
-        let [to, __  ] = await doc.buffer.mark(">")
+        let [from,] = await doc.buffer.mark("<")
+        let [to,] = await doc.buffer.mark(">")
         let result: string[] = []
-        for(let i = from; i <= to; ++i)
-        {
+        for (let i = from; i <= to; ++i) {
             result.push(doc.getline(i - 1))
         }
         return result
@@ -87,3 +87,31 @@ export async function getCurrentSelection(mode: string) {
     return []
 }
 
+export function httpsGet<T>(
+    url: string,
+    cb: (resolve: (value?: T | PromiseLike<T>) => void,
+        reject: (reason?: any) => void,
+        res: IncomingMessage)
+        => void) {
+    return new Promise<T>((resolve, reject) => {
+        const req = followRedirects.https.request(url, (res: IncomingMessage) => {
+            if (res.statusCode != 200) {
+                reject(new Error(`Invalid response from ${url}: ${res.statusCode}`))
+                return
+            }
+            cb(resolve, reject, res)
+        })
+        req.on('error', reject)
+        req.end()
+    })
+}
+
+export function httpsGetJson<T>(url: string): Promise<T> {
+    return httpsGet(url, (resolve, reject, response) => {
+        let data = ''
+        response.on('data', chunk => data += chunk)
+        response.on('end', () => {
+            resolve(JSON.parse(data))
+        })
+    })
+}

@@ -2,15 +2,14 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { workspace, extensions, ExtensionContext } from 'coc.nvim'
-import {sleep} from "./utils"
+import {workspace, extensions, ExtensionContext} from 'coc.nvim'
+import {httpsGet, httpsGetJson} from "./utils"
 import fs = require("fs");
 import path = require("path");
 import process = require("process");
-import { IncomingMessage, RequestOptions, Agent } from 'http'
-import { parse } from 'url'
+import {IncomingMessage, RequestOptions, Agent, get} from 'http'
+import {parse} from 'url'
 const tunnel = require('tunnel')
-const followRedirects = require("follow-redirects")
 const unzip = require("extract-zip");
 const rimraf = require("rimraf")
 
@@ -47,12 +46,11 @@ export function getPlatformDetails(): IPlatformDetails {
     };
 }
 
-export function getPlatformSignature(): string
-{
+export function getPlatformSignature(): string {
     const plat = getPlatformDetails()
 
-    const os_sig = (()=>{
-        switch(plat.operatingSystem){
+    const os_sig = (() => {
+        switch (plat.operatingSystem) {
             case OperatingSystem.Windows: return "win"
             case OperatingSystem.Linux: return "linux"
             case OperatingSystem.MacOS: return "osx"
@@ -60,91 +58,100 @@ export function getPlatformSignature(): string
         }
     })()
 
-    const arch_sig = (()=>{
-        if(plat.isProcess64Bit) return "x64"
+    const arch_sig = (() => {
+        if (plat.isProcess64Bit) return "x64"
         else return "x86"
     })()
 
     return `${os_sig}-${arch_sig}`
 }
 
-export interface ILanguageServerPackage
-{
+export interface ILanguageServerPackage {
+    //  the executable of the language server, 
+    //  in the downloaded and extracted package
     executable: string
-    downloadUrl: string
+    platformPath: string
 }
 
-export interface ILanguageServerRepository
-{
-    [platform:string]: ILanguageServerPackage 
+export interface ILanguageServerPackages {
+    [platform: string]: ILanguageServerPackage
 }
 
-export type LanguageServerDownloadChannel =
-    | { type: "nightly" }
-    | { type: "latest" }
-    | { type: "specific-tag" }
+export type LanguageServerRepository =
+    | {kind: "github", repo: string, channel: string}
+    | {kind: "url-prefix", url: string}
 
-export class LanguageServerProvider
-{
+interface IGithubAsset {
+    name: string
+    browser_download_url: string
+}
+
+interface IGithubRelease {
+    assets: IGithubAsset[]
+}
+
+export class LanguageServerProvider {
     private extensionStoragePath: string
+    private languageServerName: string
     private languageServerDirectory: string
     private languageServerZip: string
     private languageServerExe: string
     private languageServerPackage: ILanguageServerPackage
 
-    constructor(private extension: ExtensionContext, private repo: ILanguageServerRepository, private channel: LanguageServerDownloadChannel)
-    {
+    constructor(extension: ExtensionContext, name: string, packs: ILanguageServerPackages, private repo: LanguageServerRepository) {
         const platsig = getPlatformSignature()
+        this.languageServerName = name
         this.extensionStoragePath = extension.storagePath
-        this.languageServerPackage = repo[platsig]
+        this.languageServerPackage = packs[platsig]
 
-        if(!this.languageServerPackage) { throw "Platform not supported" }
+        if (!this.languageServerPackage) {throw "Platform not supported"}
 
         this.languageServerDirectory = path.join(this.extensionStoragePath, "server")
         this.languageServerZip = this.languageServerDirectory + ".zip"
         this.languageServerExe = path.join(this.languageServerDirectory, this.languageServerPackage.executable)
     }
 
+    async getDownloadUrl(platfile: string): Promise<string> {
+        if (this.repo.kind === "github") {
+            let {repo: repo, channel: channel} = this.repo
+            let api_url = `https://api.github.com/repos/${repo}/releases/${channel}`
+            let api_result = await httpsGetJson<IGithubRelease>(api_url)
+            let matched_assets = api_result.assets.filter(x => x.name === platfile)
+            return matched_assets[0].browser_download_url
+        } else if (this.repo.kind === "url-prefix") {
+            return `${this.repo.url}/${platfile}`
+        }
+        throw new Error("unsupported repo kind.")
+    }
+
     public async downloadLanguageServer(): Promise<void> {
 
         let item = workspace.createStatusBarItem(0, {progress: true})
-        item.text = "Downloading F# Language Server"
+        item.text = `Downloading ${this.languageServerName}`
         item.show()
 
-        if(!fs.existsSync(this.extensionStoragePath)) {
+        if (!fs.existsSync(this.extensionStoragePath)) {
             fs.mkdirSync(this.extensionStoragePath)
         }
 
-        if(fs.existsSync(this.languageServerDirectory)){
+        if (fs.existsSync(this.languageServerDirectory)) {
             rimraf.sync(this.languageServerDirectory)
         }
 
-        let url = this.languageServerPackage.downloadUrl
-
-        if(this.channel.type === "nightly")
-        {
-            url = url.replace("RELEASE", "nightly")
-        }
+        let platfile = this.languageServerPackage.platformPath
+        let url = await this.getDownloadUrl(platfile)
 
         fs.mkdirSync(this.languageServerDirectory)
 
-        await new Promise<void>((resolve, reject) => {
-            const req = followRedirects.https.request(url, (res: IncomingMessage) => {
-              if (res.statusCode != 200) {
-                reject(new Error(`Invalid response from ${url}: ${res.statusCode}`))
-                return
-              }
-              let file = fs.createWriteStream(this.languageServerZip)
-              let stream = res.pipe(file)
-              stream.on('finish', resolve)
-            })
-            req.on('error', reject)
-            req.end()
+        await httpsGet(url, (resolve, _, res) => {
+            let file = fs.createWriteStream(this.languageServerZip)
+            let stream = res.pipe(file)
+            stream.on('finish', resolve)
         })
 
         await new Promise<void>((resolve, reject) => {
             unzip(this.languageServerZip, {dir: this.languageServerDirectory}, (err: any) => {
-                if(err) reject(err)
+                if (err) reject(err)
                 else resolve()
             })
         })

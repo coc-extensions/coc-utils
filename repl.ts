@@ -79,40 +79,57 @@ export class REPLProcess {
     }
 }
 
-let currentREPL: REPLProcess = undefined
-async function createREPL () {
-    if(currentREPL) {
-        currentREPL.dispose()
-        currentREPL = undefined
-    }
-    currentREPL = new REPLProcess("F# REPL", "dotnet", ["fsi", "--readline+"]) 
-    currentREPL.onExited(() => {
-        currentREPL = undefined
-    })
-    await currentREPL.start()
-    return currentREPL.onExited
+export interface IREPLDescriptor 
+{
+    filetype: string
+    title: string
+    command: string
+    args: string[]
+    // some REPLs require a special sequence to be sent
+    // to commit evaluation.
+    commit: string
 }
 
+export class REPLProvider {
+    private m_proc: REPLProcess = undefined
 
-export async function doEval(mode: string) {
-
-    let document = await workspace.document
-    if (!document || document.filetype !== 'fsharp') {
-        return
+    constructor(public desc: IREPLDescriptor) {
     }
 
-    if(!currentREPL) {
-        await createREPL()
+    async createREPL() {
+        if (this.m_proc) {
+            this.m_proc.dispose()
+            this.m_proc = undefined
+        }
+        this.m_proc = new REPLProcess(this.desc.title, this.desc.command, this.desc.args)
+        this.m_proc.onExited(() => {
+            this.m_proc = undefined
+        })
+        await this.m_proc.start()
+        return this.m_proc.onExited
     }
 
-    // TODO: move to workspace.getCurrentSelection when we get an answer:
-    // https://github.com/neoclide/coc.nvim/issues/933
-    const content = await getCurrentSelection(mode)
-    for(let line of content){
-        await currentREPL.eval(line)
+    public async eval(mode: string) {
+
+        let document = await workspace.document
+        if (!document || document.filetype !== this.desc.filetype) {
+            return
+        }
+
+        if (!this.m_proc) {
+            await this.createREPL()
+        }
+
+        // TODO: move to workspace.getCurrentSelection when we get an answer:
+        // https://github.com/neoclide/coc.nvim/issues/933
+        const content = await getCurrentSelection(mode)
+        for (let line of content) {
+            await this.m_proc.eval(line)
+        }
+        await this.m_proc.eval(this.desc.commit)
+        // see :help feedkeys
+        await workspace.nvim.call('eval', `feedkeys("\\<esc>${content.length}j", "in")`)
+        // await currentREPL.scrollToBottom()
     }
-    await currentREPL.eval(";;")
-    // see :help feedkeys
-    await workspace.nvim.call('eval', `feedkeys("\\<esc>${content.length}j", "in")`)
-    // await currentREPL.scrollToBottom()
 }
+
