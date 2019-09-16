@@ -1,6 +1,6 @@
 {
     "name": "coc-utils",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Utilities for coc.nvim extensions",
     "main": "out/index.js",
     "scripts": {
@@ -17,6 +17,7 @@
     },
     "devDependencies": {
         "@types/node": "^10.3.3",
+        "@types/follow-redirects": "^1.7.0",
         "coc.nvim": ">=0.0.71",
         "typescript": "^3.0.3"
     },

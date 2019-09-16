@@ -1,14 +1,10 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
-
-import {workspace, extensions, ExtensionContext} from 'coc.nvim'
-import {httpsGet, httpsGetJson} from "./utils"
+import {workspace, ExtensionContext} from 'coc.nvim'
+import {httpsGet, httpsGetJson, HttpsOpts} from "./utils"
 import fs = require("fs");
 import path = require("path");
 import process = require("process");
-import {IncomingMessage, RequestOptions, Agent, get} from 'http'
 import {parse} from 'url'
+import {https, FollowOptions} from 'follow-redirects'
 const tunnel = require('tunnel')
 const unzip = require("extract-zip");
 const rimraf = require("rimraf")
@@ -115,10 +111,8 @@ export class LanguageServerProvider {
         if (this.repo.kind === "github") {
             let {repo: repo, channel: channel} = this.repo
             let api_url = `https://api.github.com/repos/${repo}/releases/${channel}`
-            let api_opts = parse(api_url)
-            api_opts.agents = {
-                https: new https.Agent()
-            }
+            let api_opts: HttpsOpts = parse(api_url)
+            api_opts.agents = {https: new https.Agent({}), }
             let api_result = await httpsGetJson<IGithubRelease>(api_opts)
             let matched_assets = api_result.assets.filter(x => x.name === platfile)
             return matched_assets[0].browser_download_url

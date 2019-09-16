@@ -1,7 +1,3 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
-
 "use strict";
 
 import fs = require("fs");
@@ -11,7 +7,13 @@ import {workspace} from 'coc.nvim';
 import {Uri} from 'coc.nvim'
 import {IncomingMessage} from 'http';
 
-const followRedirects = require("follow-redirects")
+import { http, https } from "follow-redirects";
+
+export type FstArg<T> = T extends (arg1: infer U, ...args: any[]) => any ? U : any
+export type SndArg<T> = T extends (arg1: any, arg2: infer U, ...args: any[]) => any ? U : any
+
+export type HttpsOpts = FstArg<typeof https.request>
+export type HttpOpts = FstArg<typeof http.request>
 
 export function fileURLToPath(x: string) {
     return Uri.parse(x).fsPath
@@ -88,13 +90,13 @@ export async function getCurrentSelection(mode: string) {
 }
 
 export function httpsGet<T>(
-    url: string|any,
+    url: HttpsOpts,
     cb: (resolve: (value?: T | PromiseLike<T>) => void,
         reject: (reason?: any) => void,
         res: IncomingMessage)
         => void) {
     return new Promise<T>((resolve, reject) => {
-        const req = followRedirects.https.request(url, (res: IncomingMessage) => {
+        const req = https.request(url, (res: IncomingMessage) => {
             if (res.statusCode != 200) {
                 reject(new Error(`Invalid response from ${url}: ${res.statusCode}`))
                 return
@@ -106,8 +108,8 @@ export function httpsGet<T>(
     })
 }
 
-export function httpsGetJson<T>(url: string|any): Promise<T> {
-    return httpsGet(url, (resolve, reject, response) => {
+export function httpsGetJson<T>(url: HttpsOpts): Promise<T> {
+    return httpsGet(url, (resolve, __, response) => {
         let data = ''
         response.on('data', chunk => data += chunk)
         response.on('end', () => {
