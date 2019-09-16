@@ -98,11 +98,12 @@ export function httpsGet<T>(
     return new Promise<T>((resolve, reject) => {
         const req = https.request(url, (res: IncomingMessage) => {
             if (res.statusCode != 200) {
-                reject(new Error(`Invalid response from ${url}: ${res.statusCode}`))
+                reject(new Error(`Invalid response from ${JSON.stringify(url)}: ${res.statusCode}`))
                 return
             }
             cb(resolve, reject, res)
         })
+        req.setHeader('user-agent', 'coc.nvim')
         req.on('error', reject)
         req.end()
     })
