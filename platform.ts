@@ -115,7 +115,11 @@ export class LanguageServerProvider {
         if (this.repo.kind === "github") {
             let {repo: repo, channel: channel} = this.repo
             let api_url = `https://api.github.com/repos/${repo}/releases/${channel}`
-            let api_result = await httpsGetJson<IGithubRelease>(api_url)
+            let api_opts = parse(api_url)
+            api_opts.agents = {
+                https: new https.Agent()
+            }
+            let api_result = await httpsGetJson<IGithubRelease>(api_opts)
             let matched_assets = api_result.assets.filter(x => x.name === platfile)
             return matched_assets[0].browser_download_url
         } else if (this.repo.kind === "url-prefix") {

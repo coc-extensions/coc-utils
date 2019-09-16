@@ -88,7 +88,7 @@ export async function getCurrentSelection(mode: string) {
 }
 
 export function httpsGet<T>(
-    url: string,
+    url: string|any,
     cb: (resolve: (value?: T | PromiseLike<T>) => void,
         reject: (reason?: any) => void,
         res: IncomingMessage)
@@ -106,7 +106,7 @@ export function httpsGet<T>(
     })
 }
 
-export function httpsGetJson<T>(url: string): Promise<T> {
+export function httpsGetJson<T>(url: string|any): Promise<T> {
     return httpsGet(url, (resolve, reject, response) => {
         let data = ''
         response.on('data', chunk => data += chunk)
