@@ -182,6 +182,10 @@ export class LanguageServerProvider {
         return this.languageServerExe
     }
 
+    public getLanguageServerVersion(): string {
+        return this.loadLocalDownloadInfo().version
+    }
+
     shouldRegularUpdate(): boolean {
         let thres = 7 * 86400000
         let info = this.loadLocalDownloadInfo()
