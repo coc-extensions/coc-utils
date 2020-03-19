@@ -44,13 +44,13 @@ export function createProgressListeners(client: LanguageClient) {
     }
 
     // Use custom notifications to drive progressListener
-    client.onNotification('fsharp/startProgress', (start: StartProgress) => {
+    client.onNotification(`${client.id}/startProgress`, (start: StartProgress) => {
         progressListener.startProgress(start);
     });
-    client.onNotification('fsharp/incrementProgress', (fileName: string) => {
+    client.onNotification(`${client.id}/incrementProgress`, (fileName: string) => {
         progressListener.incrementProgress(fileName);
     });
-    client.onNotification('fsharp/endProgress', () => {
+    client.onNotification(`${client.id}/endProgress`, () => {
         progressListener.endProgress();
     });
 }
