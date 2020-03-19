@@ -1,6 +1,6 @@
 {
     "name": "coc-utils",
-    "version": "0.0.10",
+    "version": "0.0.12",
     "description": "Utilities for coc.nvim extensions",
     "main": "out/index.js",
     "scripts": {
@@ -8,19 +8,21 @@
         "watch": "tsc -watch -p ./"
     },
     "dependencies": {
-        "follow-redirects": "^1.7.0",
-        "@types/follow-redirects": "^1.7.0",
-        "rimraf": "^2.6.3",
-        "@types/rimraf": "^2.0.2",
-        "vscode-jsonrpc": ">=4.0.0",
-        "vscode-languageserver-protocol": ">=3.14.0",
         "extract-zip": "^1.6.7",
-        "@types/extract-zip": "^1.6.2"
+        "follow-redirects": "^1.7.0",
+        "rimraf": "^2.6.3",
+        "tunnel": "0.0.6",
+        "vscode-jsonrpc": ">=4.0.0",
+        "vscode-languageserver-protocol": ">=3.14.0"
     },
     "devDependencies": {
+        "@types/extract-zip": "^1.6.2",
+        "@types/follow-redirects": "^1.7.0",
         "@types/node": "^10.3.3",
-        "coc.nvim": ">=0.0.71",
-        "typescript": "^3.0.3"
+        "@types/rimraf": "^2.0.2",
+        "@types/tunnel": "0.0.1",
+        "coc.nvim": "^0.0.77",
+        "typescript": "^3.8.3"
     },
     "engines": {
         "coc": ">=0.0.71"

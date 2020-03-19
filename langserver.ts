@@ -3,7 +3,6 @@ import {httpsGet, httpsGetJson, HttpsOpts, checkIfFileExists} from "./utils"
 import fs = require("fs");
 import path = require("path");
 import {getPlatformSignature, getPlatformDetails, OperatingSystem} from './platform';
-import {parse} from 'url';
 import unzip from "extract-zip";
 import rimraf from "rimraf";
 
@@ -72,8 +71,7 @@ export class LanguageServerProvider {
         if (this.repo.kind === "github") {
             let {repo: repo, channel: channel} = this.repo
             let api_url = `https://api.github.com/repos/${repo}/releases/${channel}`
-            let api_opts: HttpsOpts = parse(api_url)
-            let api_result = await httpsGetJson<IGithubRelease>(api_opts)
+            let api_result = await httpsGetJson<IGithubRelease>(api_url)
             let matched_assets = api_result.assets.filter(x => x.name === platfile)
             return {
                 url: matched_assets[0].browser_download_url,
