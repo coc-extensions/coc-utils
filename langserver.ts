@@ -115,7 +115,7 @@ export class LanguageServerProvider {
                 fs.mkdirSync(this.extensionStoragePath)
             }
 
-            item.text = `$(cloud-download) Looking for ${this.languageServerName} updates`
+            item.text = `Looking for ${this.languageServerName} updates`
             item.show()
 
             let platfile = this.languageServerPackage.platformPath
@@ -134,7 +134,7 @@ export class LanguageServerProvider {
 
             fs.mkdirSync(this.languageServerDirectory)
 
-            item.text = `$(desktop-download) Downloading ${this.languageServerName}`
+            item.text = `Downloading ${this.languageServerName}`
             item.show()
             workspace.showMessage(`Downloading ${this.languageServerName}`, 'more')
 
@@ -144,7 +144,7 @@ export class LanguageServerProvider {
                 stream.on('finish', resolve)
             })
 
-            item.text = `$(archive) Extracting ${this.languageServerName}`
+            item.text = `Extracting ${this.languageServerName}`
             item.show()
             workspace.showMessage(`Extracting ${this.languageServerName}`, 'more')
 
