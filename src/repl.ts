@@ -115,6 +115,8 @@ export class REPLProvider {
             await this.createREPL()
         }
 
+        const win = await workspace.nvim.window
+
         // TODO: move to workspace.getCurrentSelection when we get an answer:
         // https://github.com/neoclide/coc.nvim/issues/933
         const content = await getCurrentSelection(mode)
@@ -125,6 +127,8 @@ export class REPLProvider {
         // see :help feedkeys
         await workspace.nvim.call('eval', `feedkeys("\\<esc>${content.length}j", "in")`)
         // await currentREPL.scrollToBottom()
+
+        await workspace.nvim.setWindow(win)
     }
 }
 

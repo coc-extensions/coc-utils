@@ -11,6 +11,7 @@ export interface IPlatformDetails {
     operatingSystem: OperatingSystem;
     isOS64Bit: boolean;
     isProcess64Bit: boolean;
+    architecture: string;
 }
 
 export function getPlatformDetails(): IPlatformDetails {
@@ -24,12 +25,16 @@ export function getPlatformDetails(): IPlatformDetails {
         operatingSystem = OperatingSystem.Linux;
     }
 
-    const isProcess64Bit = process.arch === "x64";
+    const isProcess64Bit = 
+      process.arch === "x64"
+      || process.arch === "aarch64"
+      || process.arch === "arm64";
 
     return {
         operatingSystem,
         isOS64Bit: isProcess64Bit || process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432"),
         isProcess64Bit,
+        architecture: process.arch
     };
 }
 
@@ -45,11 +50,6 @@ export function getPlatformSignature(): string {
         }
     })()
 
-    const arch_sig = (() => {
-        if (plat.isProcess64Bit) return "x64"
-        else return "x86"
-    })()
-
-    return `${os_sig}-${arch_sig}`
+    return `${os_sig}-${plat.architecture}`
 }
 
