@@ -99,6 +99,7 @@ export class DotnetResolver {
       console.log(s)
       switch (s) {
         case '.NET SDK (reflecting any global.json):':
+        case '.NET Core SDK (reflecting any global.json):':
           state = 'ver';
           break;
         case 'Runtime Environment:':
@@ -108,9 +109,11 @@ export class DotnetResolver {
           state = 'host';
           break;
         case '.NET SDKs installed:':
+        case '.NET Core SDKs installed:':
           state = 'sdks';
           break;
         case '.NET runtimes installed:':
+        case '.NET Core runtimes installed:':
           state = 'rt';
           break;
         case '':
