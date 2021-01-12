@@ -34,7 +34,6 @@
         "url": "git+https://github.com/coc-extensions/coc-utils.git"
     },
     "keywords": [
-        "coc.nvim",
         "extension",
         "utility"
     ],
