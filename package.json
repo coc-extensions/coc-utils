@@ -26,6 +26,9 @@
         "typescript": "^3.0.3",
         "coc.nvim": "^0.0.77"
     },
+    "engines": {
+        "coc": ">=0.0.77"
+    },
     "files": [
         "out"
     ],
