@@ -11,7 +11,7 @@ export interface ILanguageServerPackage {
     //  the executable of the language server, 
     //  in the downloaded and extracted package
     executable: string
-    platformPath: string
+    platformPath: string | RegExp
 }
 
 export interface ILanguageServerPackages {
@@ -67,12 +67,19 @@ export class LanguageServerProvider {
         this.languageServerExe = path.join(this.languageServerDirectory, this.languageServerPackage.executable)
     }
 
-    async fetchDownloadInfo(platfile: string): Promise<IDownloadInfo> {
+    async fetchDownloadInfo(platfile: string | RegExp): Promise<IDownloadInfo> {
         if (this.repo.kind === "github") {
             let {repo: repo, channel: channel} = this.repo
             let api_url = `https://api.github.com/repos/${repo}/releases/${channel}`
             let api_result = await httpsGetJson<IGithubRelease>(api_url)
-            let matched_assets = api_result.assets.filter(x => x.name === platfile)
+            let matched_assets = api_result.assets.filter(
+              x => {
+                if (typeof platfile === "string") {
+                  return x.name === platfile
+                } else {
+                  return platfile.exec(x.name);
+                }
+            })
             return {
                 url: matched_assets[0].browser_download_url,
                 version: api_result.name,
